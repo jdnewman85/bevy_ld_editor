@@ -10,9 +10,10 @@ struct Clickable;
 
 fn clickable_sprites(
     wnds: Res<Windows>,
+    asset_server: Res<AssetServer>,
     assets: Res<Assets<Image>>,
     camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    mut clickable_sprite_query: Query<(&GlobalTransform, &mut Sprite, &Handle<Image>), With<Clickable>>,
+    mut clickable_sprite_query: Query<(&GlobalTransform, &mut Sprite, &mut Handle<Image>), With<Clickable>>,
 ) {
     // TODO Assumes single camera marked as MainCamera
     let (camera, camera_transform) = camera_q.single();
@@ -31,8 +32,8 @@ fn clickable_sprites(
         let world_pos: Vec2 = world_pos.truncate();
 
         //TEMP Let's hack in some mouse collision checks
-        for (transform, mut sprite, texture_handle) in clickable_sprite_query.iter_mut() {
-            let image = assets.get(texture_handle).unwrap();
+        for (transform, mut sprite, mut texture_handle) in clickable_sprite_query.iter_mut() {
+            let image = assets.get(texture_handle.clone()).unwrap();
             let image_size = image.size();
             let x1 = transform.translation.x - (image_size.x/2.0);
             let y1 = transform.translation.y - (image_size.y/2.0);
@@ -49,6 +50,7 @@ fn clickable_sprites(
                     blue: 0.0,
                     alpha: 1.0,
                 };
+                *texture_handle = asset_server.load("white_square_32.png");
             } else {
                 sprite.color = Color::WHITE;
             }
