@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy_render::camera::RenderTarget;
 
+//use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+//use bevy::window::{PresentMode, WindowMode};
+
 use bevy_inspector_egui::WorldInspectorPlugin;
 
 #[derive(Component)]
@@ -118,15 +121,20 @@ fn startup(
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
+            title: String::from("Sprite based ladder editor"),
             width: 1270.0,
             height: 720.0,
-            title: String::from("Sprite based ladder editor"),
+//          mode: WindowMode::Fullscreen,
+//          present_mode: PresentMode::Immediate, //TODO TEMP request disable vsync
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
         .add_startup_system(startup)
         .add_plugin(WorldInspectorPlugin::new())
         .add_system(clickable_sprites)
+        //FPS
+//      .add_plugin(LogDiagnosticsPlugin::default())
+//      .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .run();
 }
 
