@@ -11,9 +11,11 @@ struct Clickable;
 fn clickable_sprites(
     wnds: Res<Windows>,
     asset_server: Res<AssetServer>,
+    texture_atlases: Res<Assets<TextureAtlas>>,
     assets: Res<Assets<Image>>,
     camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut clickable_sprite_query: Query<(&GlobalTransform, &mut Sprite, &mut Handle<Image>), With<Clickable>>,
+    mut clickable_atlas_sprite_query: Query<(&GlobalTransform, &mut TextureAtlasSprite, &Handle<TextureAtlas>), With<Clickable>>,
 ) {
     // TODO Assumes single camera marked as MainCamera
     let (camera, camera_transform) = camera_q.single();
@@ -55,10 +57,40 @@ fn clickable_sprites(
                 sprite.color = Color::WHITE;
             }
         }
+
+        // Atlas
+        for (transform, mut sprite, texture_handle) in clickable_atlas_sprite_query.iter_mut() {
+            let texture_atlas = texture_atlases.get(texture_handle).unwrap();
+            let mut image_size = texture_atlas.size;
+            image_size.x /= 3.0; //TODO BUG This is full size of underlying atlas image
+            let x1 = transform.translation.x - (image_size.x/2.0);
+            let y1 = transform.translation.y - (image_size.y/2.0);
+            let x2 = transform.translation.x + (image_size.x/2.0);
+            let y2 = transform.translation.y + (image_size.y/2.0);
+
+            if world_pos.x > x1 && world_pos.x < x2 &&
+                world_pos.y > y1 && world_pos.y < y2
+            {
+                //dbg!(world_pos.x, world_pos.y);
+                sprite.color = Color::Rgba{
+                    red: 1.0,
+                    green: 0.0,
+                    blue: 0.0,
+                    alpha: 1.0,
+                };
+                sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
+            } else {
+                sprite.color = Color::WHITE;
+            }
+        }
     }
 }
 
-fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn startup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(MainCamera);
@@ -67,6 +99,17 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("white_ball_32_alpha.png"),
             transform: Transform::from_xyz(300.0, 0.0, 0.0),
+            ..default()
+        })
+        .insert(Clickable);
+
+    let texture_handle = asset_server.load("atlas_32_96_alpha.png");
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 3, 1);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    commands
+        .spawn_bundle(SpriteSheetBundle{
+            texture_atlas: texture_atlas_handle,
+            transform: Transform::from_xyz(-300.0, 0.0, 0.0),
             ..default()
         })
         .insert(Clickable);
