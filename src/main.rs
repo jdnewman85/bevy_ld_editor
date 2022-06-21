@@ -4,6 +4,8 @@ use bevy_render::camera::RenderTarget;
 //use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 //use bevy::window::{PresentMode, WindowMode};
 
+mod helpers;
+
 use bevy_inspector_egui::WorldInspectorPlugin;
 
 #[derive(Component)]
@@ -135,6 +137,7 @@ fn main() {
         //FPS
 //      .add_plugin(LogDiagnosticsPlugin::default())
 //      .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_system(helpers::camera::movement)
         .run();
 }
 
