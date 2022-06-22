@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_render::camera::RenderTarget;
 
-//use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-//use bevy::window::{PresentMode, WindowMode};
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::window::{PresentMode, WindowMode};
 
 mod helpers;
 
@@ -17,7 +17,7 @@ fn clickable_sprites(
     wnds: Res<Windows>,
     asset_server: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
-    assets: Res<Assets<Image>>,
+    images: Res<Assets<Image>>,
     camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut clickable_sprite_query: Query<(&GlobalTransform, &mut Sprite, &mut Handle<Image>), With<Clickable>>,
     mut clickable_atlas_sprite_query: Query<(&GlobalTransform, &mut TextureAtlasSprite, &Handle<TextureAtlas>), With<Clickable>>,
@@ -40,7 +40,7 @@ fn clickable_sprites(
 
         //TEMP Let's hack in some mouse collision checks
         for (transform, mut sprite, mut texture_handle) in clickable_sprite_query.iter_mut() {
-            let image = assets.get(texture_handle.clone()).unwrap();
+            let image = images.get(texture_handle.clone()).unwrap();
             let image_size = image.size();
             let x1 = transform.translation.x - (image_size.x/2.0);
             let y1 = transform.translation.y - (image_size.y/2.0);
@@ -126,8 +126,8 @@ fn main() {
             title: String::from("Sprite based ladder editor"),
             width: 1270.0,
             height: 720.0,
-//          mode: WindowMode::Fullscreen,
-//          present_mode: PresentMode::Immediate, //TODO TEMP request disable vsync
+          mode: WindowMode::Fullscreen,
+          present_mode: PresentMode::Immediate, //TODO TEMP request disable vsync
             ..Default::default()
         })
         .insert_resource(Msaa{samples: 1})
@@ -136,8 +136,8 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_system(clickable_sprites)
         //FPS
-//      .add_plugin(LogDiagnosticsPlugin::default())
-//      .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_system(helpers::camera::movement)
         .run();
 }
