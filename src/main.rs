@@ -130,6 +130,7 @@ fn main() {
 //          present_mode: PresentMode::Immediate, //TODO TEMP request disable vsync
             ..Default::default()
         })
+        .insert_resource(Msaa{samples: 1})
         .add_plugins(DefaultPlugins)
         .add_startup_system(startup)
         .add_plugin(WorldInspectorPlugin::new())
