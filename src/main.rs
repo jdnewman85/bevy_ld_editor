@@ -34,18 +34,18 @@ fn clickable_sprites(
     if let Some(screen_pos) = wnd.cursor_position() {
         let window_size = Vec2::new(wnd.width() as f32, wnd.height() as f32);
         let screen_ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
-        let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix.inverse();
+        let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix().inverse();
         let world_pos = ndc_to_world.project_point3(screen_ndc.extend(-1.0));
         let world_pos: Vec2 = world_pos.truncate();
 
         //TEMP Let's hack in some mouse collision checks
         for (transform, mut sprite, mut texture_handle) in clickable_sprite_query.iter_mut() {
-            let image = images.get(texture_handle.clone()).unwrap();
+            let image = images.get(&texture_handle.clone()).unwrap();
             let image_size = image.size();
-            let x1 = transform.translation.x - (image_size.x/2.0);
-            let y1 = transform.translation.y - (image_size.y/2.0);
-            let x2 = transform.translation.x + (image_size.x/2.0);
-            let y2 = transform.translation.y + (image_size.y/2.0);
+            let x1 = transform.translation().x - (image_size.x/2.0);
+            let y1 = transform.translation().y - (image_size.y/2.0);
+            let x2 = transform.translation().x + (image_size.x/2.0);
+            let y2 = transform.translation().y + (image_size.y/2.0);
 
             if world_pos.x > x1 && world_pos.x < x2 &&
                 world_pos.y > y1 && world_pos.y < y2
@@ -68,10 +68,10 @@ fn clickable_sprites(
             let texture_atlas = texture_atlases.get(texture_handle).unwrap();
             let mut image_size = texture_atlas.size;
             image_size.x /= 3.0; //TODO BUG This is full size of underlying atlas image
-            let x1 = transform.translation.x - (image_size.x/2.0);
-            let y1 = transform.translation.y - (image_size.y/2.0);
-            let x2 = transform.translation.x + (image_size.x/2.0);
-            let y2 = transform.translation.y + (image_size.y/2.0);
+            let x1 = transform.translation().x - (image_size.x/2.0);
+            let y1 = transform.translation().y - (image_size.y/2.0);
+            let x2 = transform.translation().x + (image_size.x/2.0);
+            let y2 = transform.translation().y + (image_size.y/2.0);
 
             if world_pos.x > x1 && world_pos.x < x2 &&
                 world_pos.y > y1 && world_pos.y < y2
@@ -97,7 +97,7 @@ fn startup(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .spawn_bundle(Camera2dBundle::default())
         .insert(MainCamera);
     
     commands
@@ -126,7 +126,7 @@ fn main() {
             title: String::from("Sprite based ladder editor"),
             width: 1270.0,
             height: 720.0,
-          mode: WindowMode::Fullscreen,
+//          mode: WindowMode::Fullscreen,
           present_mode: PresentMode::Immediate, //TODO TEMP request disable vsync
             ..Default::default()
         })
