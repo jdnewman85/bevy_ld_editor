@@ -40,7 +40,10 @@ fn clickable_sprites(
 
         //TEMP Let's hack in some mouse collision checks
         for (transform, mut sprite, mut texture_handle) in clickable_sprite_query.iter_mut() {
-            let image = images.get(&texture_handle.clone()).unwrap();
+            let Some(image) = images.get(&texture_handle.clone()) else {
+                dbg!("BUG? Image err");
+                continue;
+            };
             let image_size = image.size();
             let x1 = transform.translation().x - (image_size.x/2.0);
             let y1 = transform.translation().y - (image_size.y/2.0);
@@ -66,8 +69,7 @@ fn clickable_sprites(
         // Atlas
         for (transform, mut sprite, texture_handle) in clickable_atlas_sprite_query.iter_mut() {
             let texture_atlas = texture_atlases.get(texture_handle).unwrap();
-            let mut image_size = texture_atlas.size;
-            image_size.x /= 3.0; //TODO BUG This is full size of underlying atlas image
+            let image_size = texture_atlas.textures[sprite.index].size();
             let x1 = transform.translation().x - (image_size.x/2.0);
             let y1 = transform.translation().y - (image_size.y/2.0);
             let x2 = transform.translation().x + (image_size.x/2.0);
@@ -96,6 +98,8 @@ fn startup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
+    //let _: Handle<Image> = asset_server.load("white_square_32.png");
+
     commands
         .spawn_bundle(Camera2dBundle::default())
         .insert(MainCamera);
