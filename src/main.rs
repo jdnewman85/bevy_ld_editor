@@ -44,22 +44,11 @@ fn clickable_sprites(
                 dbg!("BUG? Image err");
                 continue;
             };
-            let image_size = image.size();
-            let x1 = transform.translation().x - (image_size.x/2.0);
-            let y1 = transform.translation().y - (image_size.y/2.0);
-            let x2 = transform.translation().x + (image_size.x/2.0);
-            let y2 = transform.translation().y + (image_size.y/2.0);
-
-            if world_pos.x > x1 && world_pos.x < x2 &&
-                world_pos.y > y1 && world_pos.y < y2
-            {
+            let delta = world_pos - transform.translation().truncate();
+            let delta_minus_image = delta.abs() - (image.size()/2.0);
+            if delta_minus_image.max_element() <= 0.0 {//if delta_minus_image.is_negative_bitmask() == 0b11 {
                 //dbg!(world_pos.x, world_pos.y);
-                sprite.color = Color::Rgba{
-                    red: 1.0,
-                    green: 0.0,
-                    blue: 0.0,
-                    alpha: 1.0,
-                };
+                sprite.color = Color::rgba(1.0, 0.0, 0.0, 1.0);
                 *texture_handle = asset_server.load("white_square_32.png");
             } else {
                 sprite.color = Color::WHITE;
@@ -69,22 +58,12 @@ fn clickable_sprites(
         // Atlas
         for (transform, mut sprite, texture_handle) in clickable_atlas_sprite_query.iter_mut() {
             let texture_atlas = texture_atlases.get(texture_handle).unwrap();
-            let image_size = texture_atlas.textures[sprite.index].size();
-            let x1 = transform.translation().x - (image_size.x/2.0);
-            let y1 = transform.translation().y - (image_size.y/2.0);
-            let x2 = transform.translation().x + (image_size.x/2.0);
-            let y2 = transform.translation().y + (image_size.y/2.0);
-
-            if world_pos.x > x1 && world_pos.x < x2 &&
-                world_pos.y > y1 && world_pos.y < y2
-            {
+            let image = texture_atlas.textures[sprite.index];
+            let delta = world_pos - transform.translation().truncate();
+            let delta_minus_image = delta.abs() - (image.size()/2.0);
+            if delta_minus_image.max_element() <= 0.0 {//if delta_minus_image.is_negative_bitmask() == 0b11 {
                 //dbg!(world_pos.x, world_pos.y);
-                sprite.color = Color::Rgba{
-                    red: 1.0,
-                    green: 0.0,
-                    blue: 0.0,
-                    alpha: 1.0,
-                };
+                sprite.color = Color::rgba(1.0, 0.0, 0.0, 1.0);
                 sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
             } else {
                 sprite.color = Color::WHITE;
@@ -103,7 +82,7 @@ fn startup(
     commands
         .spawn_bundle(Camera2dBundle::default())
         .insert(MainCamera);
-    
+
     commands
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("white_ball_32_alpha.png"),
