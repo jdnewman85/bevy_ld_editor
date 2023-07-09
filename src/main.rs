@@ -1,12 +1,11 @@
 use bevy::prelude::*;
-use bevy_render::camera::RenderTarget;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::window::{PresentMode, WindowMode};
+use bevy::window::{PresentMode, WindowMode, PrimaryWindow};
 
 mod helpers;
 
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 #[derive(Component)]
 struct MainCamera;
@@ -14,7 +13,7 @@ struct MainCamera;
 struct Clickable;
 
 fn clickable_sprites(
-    wnds: Res<Windows>,
+    window_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
     images: Res<Assets<Image>>,
@@ -25,11 +24,7 @@ fn clickable_sprites(
     // TODO Assumes single camera marked as MainCamera
     let (camera, camera_transform) = camera_q.single();
 
-    let wnd = if let RenderTarget::Window(id) = camera.target {
-        wnds.get(id).unwrap()
-    } else {
-        wnds.get_primary().unwrap()
-    };
+    let wnd = window_q.get_single().unwrap();
 
     if let Some(screen_pos) = wnd.cursor_position() {
         let window_size = Vec2::new(wnd.width() as f32, wnd.height() as f32);
@@ -80,11 +75,11 @@ fn startup(
     //let _: Handle<Image> = asset_server.load("white_square_32.png");
 
     commands
-        .spawn_bundle(Camera2dBundle::default())
+        .spawn(Camera2dBundle::default())
         .insert(MainCamera);
 
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             texture: asset_server.load("white_ball_32_alpha.png"),
             transform: Transform::from_xyz(300.0, 0.0, 0.0),
             ..default()
@@ -92,10 +87,10 @@ fn startup(
         .insert(Clickable);
 
     let texture_handle = asset_server.load("atlas_32_96_alpha.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 3, 1);
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 3, 1, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     commands
-        .spawn_bundle(SpriteSheetBundle{
+        .spawn(SpriteSheetBundle{
             texture_atlas: texture_atlas_handle,
             transform: Transform::from_xyz(-300.0, 0.0, 0.0),
             ..default()
@@ -105,22 +100,22 @@ fn startup(
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            title: String::from("Sprite based ladder editor"),
-            width: 1270.0,
-            height: 720.0,
-//          mode: WindowMode::Fullscreen,
-          present_mode: PresentMode::Immediate, //TODO TEMP request disable vsync
-            ..Default::default()
-        })
-        .insert_resource(Msaa{samples: 1})
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins.set(
+                WindowPlugin {
+                    primary_window: Some(Window {
+                        resolution: (1024.0, 768.0).into(),
+                        title: "LD Editor".to_string(),
+                        ..default()
+                    }),
+                    ..default()
+                }
+            )
+        )
+        .insert_resource(Msaa::Sample2)
         .add_startup_system(startup)
         .add_plugin(WorldInspectorPlugin::new())
         .add_system(clickable_sprites)
-        //FPS
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_system(helpers::camera::movement)
         .run();
 }
