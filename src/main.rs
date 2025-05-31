@@ -6,8 +6,6 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 mod helpers;
 
 #[derive(Component)]
-struct MainCamera;
-#[derive(Component)]
 struct Clickable;
 
 fn clickable_sprites(
@@ -15,11 +13,10 @@ fn clickable_sprites(
     asset_server: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
     images: Res<Assets<Image>>,
-    camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    camera_q: Query<(&Camera, &GlobalTransform)>,
     mut clickable_sprite_query: Query<(&GlobalTransform, &mut Sprite, &mut Handle<Image>), With<Clickable>>,
     mut clickable_atlas_sprite_query: Query<(&GlobalTransform, &mut TextureAtlasSprite, &Handle<TextureAtlas>), With<Clickable>>,
 ) {
-    // TODO Assumes single camera marked as MainCamera
     let (camera, camera_transform) = camera_q.single();
 
     let window = window_q.single();
@@ -63,9 +60,7 @@ fn startup(
 ) {
     //let _: Handle<Image> = asset_server.load("white_square_32.png");
 
-    commands
-        .spawn(Camera2dBundle::default())
-        .insert(MainCamera);
+    commands.spawn(Camera2dBundle::default());
 
     commands
         .spawn(SpriteBundle {
